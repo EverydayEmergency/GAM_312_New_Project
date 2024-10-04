@@ -4,6 +4,9 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
+#include "ResourcePoint.h"
+#include "BuildingPart.h"
+#include "Kismet/GameplayStatics.h"
 #include "InputActionValue.h"
 #include "GAM_312_New_ProjectCharacter.generated.h"
 
@@ -39,6 +42,9 @@ class AGAM_312_New_ProjectCharacter : public ACharacter
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Input, meta=(AllowPrivateAccess = "true"))
 	class UInputAction* MoveAction;
 
+	/** Interact Input Action */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	class UInputAction* InteractAction;
 	
 public:
 	AGAM_312_New_ProjectCharacter();
@@ -82,6 +88,62 @@ public:
 	/** Returns FirstPersonCameraComponent subobject **/
 	UCameraComponent* GetFirstPersonCameraComponent() const { return FirstPersonCameraComponent; }
 
+public:
+
+	UFUNCTION()
+	void FindObject();
+
+	/** Player Stats **/
+
+	// Player health variable
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Player Stats")
+	float Health = 100.0f;
+
+	// Player hunger variable
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Player Stats")
+	float Hunger = 100.0f;
+
+	// Player stamina variable
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Player Stats")
+	float Stamina = 100.0f;
+
+	// Function to assign an amount to the health variable
+	UFUNCTION(BlueprintCallable)
+	void SetHealth(float amount);
+
+	// Function to assign an amount to the hunger variable
+	UFUNCTION(BlueprintCallable)
+	void SetHunger(float amount);
+
+	// Function to assign an amount to the stamina variable
+	UFUNCTION(BlueprintCallable)
+	void SetStamina(float amount);
+
+	// Function to decrease a stat
+	UFUNCTION()
+	void DecreaseStats();
+
+	/** Player Inventory **/
+
+	// Tracks the number of materials collected by player
+	UPROPERTY()
+	float matsCollected;
+
+	// Tracks the number of objects built in scene
+	UPROPERTY()
+	float objectsBuilt;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Resources")
+	TArray<TSubclassOf<AResourcePoint>> ResourcesArray;
+
+	UPROPERTY(VisibleDefaultsOnly, Category = "Resources")
+	TArray<FString> ResourcesNameArray;
+
+	UPROPERTY(VisibleDefaultsOnly, Category = "Resources")
+	TArray<int> ResourcesAmountArray;
+
+	UFUNCTION()
+	void GiveResource(int amount, FString resource);
 
 };
 

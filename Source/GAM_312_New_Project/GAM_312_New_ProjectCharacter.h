@@ -123,27 +123,55 @@ public:
 	UFUNCTION()
 	void DecreaseStats();
 
-	/** Player Inventory **/
+	/** Resources **/
 
 	// Tracks the number of materials collected by player
 	UPROPERTY()
 	float matsCollected;
 
-	// Tracks the number of objects built in scene
-	UPROPERTY()
-	float objectsBuilt;
-
+	// Array of all the resources that are being used in the game
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Resources")
 	TArray<TSubclassOf<AResourcePoint>> ResourcesArray;
 
+	// Array of all the names of the resources being used in the game
 	UPROPERTY(VisibleDefaultsOnly, Category = "Resources")
 	TArray<FString> ResourcesNameArray;
 
+	// Array containing the amount of every resource that is gathered in the game
 	UPROPERTY(VisibleDefaultsOnly, Category = "Resources")
 	TArray<int> ResourcesAmountArray;
 
+	// Function to add to the total amount of a given resource
 	UFUNCTION()
 	void GiveResource(int amount, FString resource);
 
+	/** Building Parts **/
+	
+	// Array of all the building parts that are being used in the game
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Building Parts")
+	TArray<TSubclassOf<ABuildingPart>> BuildingPartsArray;
+
+	// Array of all the names of the building parts being used in the game
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadWrite, Category = "Building Parts")
+	TArray<FString> BuildingPartsNameArray;
+
+	// Array containing the amount of every building part that is created in the game
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadWrite, Category = "Building Parts")
+	TArray<int> BuildingPartsAmountArray;
+
+	// Function to create a building part
+	UFUNCTION(BlueprintCallable)
+	void CreateBuildingPart(TSubclassOf <ABuildingPart> buildingObject);
+
+	// Function to create a building part
+	UFUNCTION(BlueprintCallable)
+	void CreateBuildingPartByName(FString partName);
+
+	UFUNCTION(BlueprintCallable)
+	int FindBuildingPartIndex(FString partName);
+	
+	// Tracks the number of objects built in scene
+	UPROPERTY()
+	float objectsBuilt;
 };
 

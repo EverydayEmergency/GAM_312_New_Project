@@ -16,10 +16,10 @@ AGAM_312_New_ProjectCharacter::AGAM_312_New_ProjectCharacter()
 {
 	// Character doesnt have a rifle at start
 	bHasRifle = false;
-	
+
 	// Set size for collision capsule
 	GetCapsuleComponent()->InitCapsuleSize(55.f, 96.0f);
-		
+
 	// Create a CameraComponent	
 	FirstPersonCameraComponent = CreateDefaultSubobject<UCameraComponent>(TEXT("FirstPersonCamera"));
 	FirstPersonCameraComponent->SetupAttachment(GetCapsuleComponent());
@@ -34,7 +34,7 @@ AGAM_312_New_ProjectCharacter::AGAM_312_New_ProjectCharacter()
 	Mesh1P->CastShadow = false;
 	//Mesh1P->SetRelativeRotation(FRotator(0.9f, -19.19f, 5.2f));
 	Mesh1P->SetRelativeLocation(FVector(-30.f, 0.f, -150.f));
-	
+
 }
 
 void AGAM_312_New_ProjectCharacter::BeginPlay()
@@ -51,6 +51,7 @@ void AGAM_312_New_ProjectCharacter::BeginPlay()
 		}
 	}
 
+	// If there are resources in resources array then add the names of the resources to the resources name array
 	if (ResourcesArray.Num() != 0)
 	{
 		for (int i = 0; i < ResourcesArray.Num(); i++)
@@ -58,11 +59,21 @@ void AGAM_312_New_ProjectCharacter::BeginPlay()
 			FString resourceName = ResourcesArray[i].GetDefaultObject()->resourceName;
 			ResourcesNameArray.Add(resourceName);
 			ResourcesAmountArray.Add(0);
-			GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, resourceName);
-			GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, FString::FromInt(ResourcesAmountArray[i]));
+			GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, resourceName + TEXT(": ") + FString::FromInt(ResourcesAmountArray[i]));
 		}
 	}
-	
+
+	// If there are building parts in the building parts array then add the naems of the building parts to the building parts array
+	if (BuildingPartsArray.Num() != 0)
+	{
+		for (int i = 0; i < BuildingPartsArray.Num(); i++)
+		{
+			FString partName = BuildingPartsArray[i].GetDefaultObject()->BuildingPartName;
+			BuildingPartsNameArray.Add(partName);
+			BuildingPartsAmountArray.Add(0);
+			GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, partName + TEXT(": ") + FString::FromInt(BuildingPartsAmountArray[i]));
+		}
+	}
 }
 
 //////////////////////////////////////////////////////////////////////////// Input
@@ -225,6 +236,7 @@ void AGAM_312_New_ProjectCharacter::DecreaseStats()
 
 void AGAM_312_New_ProjectCharacter::GiveResource(int amount, FString resource)
 {
+	// Goes through every resource in the resources array to find the resource being changed and adds the amount of the resource to the total amount of that resource
 	for (int i = 0; i < ResourcesArray.Num(); i++)
 	{
 		if (resource == ResourcesNameArray[i])
@@ -236,3 +248,143 @@ void AGAM_312_New_ProjectCharacter::GiveResource(int amount, FString resource)
 		}
 	}
 }
+
+void AGAM_312_New_ProjectCharacter::CreateBuildingPart(TSubclassOf <ABuildingPart> buildingObject)
+{
+	bool enoughResources = true;
+	bool endFunction = false;
+
+	TArray<int> resourceAmount;
+
+	GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, buildingObject.GetDefaultObject()->BuildingPartName);
+
+	// If the building object has resources used defined
+	if (buildingObject.GetDefaultObject()->resourcesUsed.Num() > 0)
+	{
+		int index = BuildingPartsNameArray.Find(buildingObject.GetDefaultObject()->BuildingPartName); // Finds the index of the building part
+
+		for (auto& Elem : buildingObject.GetDefaultObject()->resourcesUsed)
+		{
+			FString resourceName = Elem.Key.GetDefaultObject()->resourceName; // Variable for the resource name
+			int amount = Elem.Value;  // Variable for the resource amount
+			resourceAmount.Add(amount);  // Adds the amount to the array containing all the amount of resources being subtracted
+
+			// If the resource name array contains the name of the resource
+			if (ResourcesNameArray.Contains(resourceName))
+			{
+				// If the the amount subtracted from the resource amount is less than zero then there are not enough resources
+				if (ResourcesAmountArray[ResourcesNameArray.Find(resourceName)] - amount < 0)
+				{
+					enoughResources = false;
+				}
+			}
+			// If the resources name array does not contain the resource named then leave an error message
+			else
+			{
+				GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, TEXT("Error: This building part contains a resource that is not in the resource list."));
+				break;
+			}
+		}
+
+		// If there are not enough of any type of resource then set the function to end
+		if (enoughResources == false)
+		{
+			endFunction = true;
+		}
+
+		// If the end function variable is to set to true then proceed to subtract the amount from each resource
+		if (endFunction == false)
+		{
+			for (int i = 0; i < ResourcesNameArray.Num(); i++)
+			{
+				ResourcesAmountArray[i] = ResourcesAmountArray[i] - resourceAmount[i];
+				GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Blue, TEXT("Using ") + FString::FromInt(resourceAmount[i]) + TEXT(" ") + ResourcesNameArray[i]);
+
+			}
+
+			// Increments the building type amount
+			BuildingPartsAmountArray[index]++;
+		}
+	}
+}
+
+void AGAM_312_New_ProjectCharacter::CreateBuildingPartByName(FString partName)
+{
+	bool enoughResources = true;  // Variable for to test if there are enough resources
+	bool endFunction = false;  // Variable to end the function if there are not enough resources
+
+	TArray<int> resourceAmount; // Varaiable tracking the amount of each resource is being added
+
+	// If the building parts name array and the resources name array contain an element
+	if (BuildingPartsNameArray.Num() > 0 && ResourcesNameArray.Num() > 0)
+	{
+		// Checks if the building parts name array contains the part being named
+		if (BuildingPartsNameArray.Contains(partName))
+		{
+			int index = BuildingPartsNameArray.Find(partName);  // Index of the building part
+			ABuildingPart* buildingObject = BuildingPartsArray[index].GetDefaultObject();  // Variable of the building part object
+
+			// Checks if there are resources named in the creation of the building object
+			if (buildingObject->resourcesUsed.Num() > 0)
+			{
+				for (auto& Elem : buildingObject->resourcesUsed)
+				{
+					GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Blue, buildingObject->BuildingPartName);
+
+					FString resourceName = Elem.Key.GetDefaultObject()->resourceName; // Variable for the resource name
+					int amount = Elem.Value;  // Variable for the resource amount
+					resourceAmount.Add(amount);  // Adds the amount to the array containing all the amount of resources being subtracted
+
+					// If the resource name array contains the name of the resource
+					if (ResourcesNameArray.Contains(resourceName))
+					{
+						// If the the amount subtracted from the resource amount is less than zero then there are not enough resources
+						if (ResourcesAmountArray[ResourcesNameArray.Find(resourceName)] - amount < 0)
+						{
+							enoughResources = false;
+						}
+					}
+					// If the resources name array does not contain the resource named then leave an error message
+					else
+					{
+						GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, TEXT("Error: This building part contains a resource that is not in the resource list."));
+						break;
+					}
+				}
+			}
+
+			// If there are not enough of any type of resource then set the function to end
+			if (enoughResources == false)
+			{
+				endFunction = true;
+			}
+
+			// If the end function variable is to set to true then proceed to subtract the amount from each resource
+			if (endFunction == false)
+			{
+				for (int i = 0; i < ResourcesNameArray.Num(); i++)
+				{
+					ResourcesAmountArray[i] = ResourcesAmountArray[i] - resourceAmount[i];
+					GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Blue, TEXT("Using ") + FString::FromInt(resourceAmount[i]) + TEXT(" ") + ResourcesNameArray[i]);
+
+				}
+
+				// Increments the building type amount
+				BuildingPartsAmountArray[index]++;
+
+				GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Blue, TEXT("Adding 1 ") + BuildingPartsNameArray[index]);
+			}
+		}		
+	}
+}
+
+int AGAM_312_New_ProjectCharacter::FindBuildingPartIndex(FString partName)
+{
+	if (BuildingPartsNameArray.Num() > 0)
+	{
+		return BuildingPartsNameArray.Find(partName);
+	}
+	
+	return 0;
+}
+

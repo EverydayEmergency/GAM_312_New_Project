@@ -32,18 +32,15 @@ public:
 	UPROPERTY(EditAnywhere)
 	UArrowComponent* PivotArrow;
 
+	// Name of the building part
 	UPROPERTY(EditAnywhere, Category = "Building Part Information")
 	FString BuildingPartName = "Null";
-
-	// The name of the part
-	UPROPERTY(EditAnywhere, Category = "Building Part Information")
-	FString partName = "Null";
 
 	// The ID number of a part
 	UPROPERTY(EditAnywhere, Category = "Building Part Information")
 	int partID = 0;
 
-	// The amount of wood used to make the building part
+	// The amount of a resource used to make the building part
 	UPROPERTY(EditAnywhere, Category = "Resources Used")
 	TMap<TSubclassOf<AResourcePoint>, int32> resourcesUsed;
 };

@@ -33,14 +33,14 @@ public:
 	UArrowComponent* PivotArrow;
 
 	// Name of the building part
-	UPROPERTY(EditAnywhere, Category = "Building Part Information")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Building Part Information")
 	FString BuildingPartName = "Null";
 
 	// The ID number of a part
-	UPROPERTY(EditAnywhere, Category = "Building Part Information")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Building Part Information")
 	int partID = 0;
 
 	// The amount of a resource used to make the building part
-	UPROPERTY(EditAnywhere, Category = "Resources Used")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Resources Used")
 	TMap<TSubclassOf<AResourcePoint>, int32> resourcesUsed;
 };

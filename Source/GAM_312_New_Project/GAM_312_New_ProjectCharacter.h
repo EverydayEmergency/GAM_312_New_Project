@@ -134,11 +134,11 @@ public:
 	TArray<TSubclassOf<AResourcePoint>> ResourcesArray;
 
 	// Array of all the names of the resources being used in the game
-	UPROPERTY(VisibleDefaultsOnly, Category = "Resources")
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadWrite, Category = "Resources")
 	TArray<FString> ResourcesNameArray;
 
 	// Array containing the amount of every resource that is gathered in the game
-	UPROPERTY(VisibleDefaultsOnly, Category = "Resources")
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadWrite, Category = "Resources")
 	TArray<int> ResourcesAmountArray;
 
 	// Function to add to the total amount of a given resource
@@ -167,8 +167,17 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void CreateBuildingPartByName(FString partName);
 
+	// Function that finds the index of a building part based off of the building part's name
 	UFUNCTION(BlueprintCallable)
 	int FindBuildingPartIndex(FString partName);
+
+	// Function that finds the names of the resources used to create a building object
+	UFUNCTION(BlueprintCallable)
+	TArray<FString> FindBuildingPartResourcesNames(TSubclassOf<ABuildingPart> buildingObject);
+
+	// Function to to find the amount of the resources used to create a building object
+	UFUNCTION(BlueprintCallable)
+	TArray<int> FindBuildingPartResourcesAmount(TSubclassOf<ABuildingPart> buildingObject);
 	
 	// Tracks the number of objects built in scene
 	UPROPERTY()

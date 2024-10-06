@@ -388,3 +388,35 @@ int AGAM_312_New_ProjectCharacter::FindBuildingPartIndex(FString partName)
 	return 0;
 }
 
+TArray<FString> AGAM_312_New_ProjectCharacter::FindBuildingPartResourcesNames(TSubclassOf<ABuildingPart> buildingObject)
+{
+	TArray<FString> resourceNames;
+
+	if (BuildingPartsArray.Num() > 0)
+	{
+		for (auto& Elem : buildingObject.GetDefaultObject()->resourcesUsed)
+		{
+			FString name = Elem.Key.GetDefaultObject()->resourceName;
+			resourceNames.Add(name);
+		}
+	}
+		
+	return resourceNames;
+}
+
+TArray<int> AGAM_312_New_ProjectCharacter::FindBuildingPartResourcesAmount(TSubclassOf<ABuildingPart> buildingObject)
+{
+	TArray<int> resourceAmount;
+
+	if (BuildingPartsArray.Num() > 0)
+	{
+		for (auto& Elem : buildingObject.GetDefaultObject()->resourcesUsed)
+		{
+			int amount = Elem.Value;
+			resourceAmount.Add(amount);
+		}
+	}
+
+	return resourceAmount;
+}
+

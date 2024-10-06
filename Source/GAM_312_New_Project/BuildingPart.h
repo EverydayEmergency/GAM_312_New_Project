@@ -40,6 +40,10 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Building Part Information")
 	int partID = 0;
 
+	// The grid snap amount for the object
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Building Part Information")
+	double gridSnap = 10;
+
 	// The amount of a resource used to make the building part
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Resources Used")
 	TMap<TSubclassOf<AResourcePoint>, int32> resourcesUsed;

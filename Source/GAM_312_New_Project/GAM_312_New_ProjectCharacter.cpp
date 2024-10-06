@@ -42,6 +42,11 @@ void AGAM_312_New_ProjectCharacter::BeginPlay()
 	// Call the base class  
 	Super::BeginPlay();
 
+	FTimerHandle StatsTimerHandle;
+
+	// Every 2 seconds this will check the StatsTimerHandle to execute the DecreaseStates function
+	GetWorld()->GetTimerManager().SetTimer(StatsTimerHandle, this, &AGAM_312_New_ProjectCharacter::DecreaseStats, 2.0f, true);
+
 	//Add Input Mapping Context
 	if (APlayerController* PlayerController = Cast<APlayerController>(Controller))
 	{
@@ -101,6 +106,36 @@ void AGAM_312_New_ProjectCharacter::SetupPlayerInputComponent(class UInputCompon
 	}
 }
 
+void AGAM_312_New_ProjectCharacter::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime);
+
+	// Updates the player UI to reflect the current status of health, hunger, and stamina
+	playerUI->UpdateBars(Health, Hunger, Stamina);
+
+	// If the player is building then the part chosen will appear in front of the player until it is placed
+	if (isBuilding)
+	{
+		if (spawnedPart)
+		{
+			FVector StartLocation = FirstPersonCameraComponent->GetComponentLocation();
+			FVector Direction = FirstPersonCameraComponent->GetForwardVector() * 500.0f;
+			FVector EndLocation = StartLocation + Direction;
+
+			// Snaps the object to the grid
+			EndLocation = EndLocation.GridSnap(spawnedPart->gridSnap);
+
+			// Object cannot go below the floor when moved around
+			if (EndLocation.Z < 0)
+			{
+				EndLocation.Z = 0;
+			}
+
+			spawnedPart->SetActorLocation(EndLocation);
+		}
+	}
+}
+
 void AGAM_312_New_ProjectCharacter::FindObject()
 {
 	// Makes a line trace
@@ -135,10 +170,12 @@ void AGAM_312_New_ProjectCharacter::FindObject()
 					if (HitResource->totalResource > resourceValue)
 					{
 						GiveResource(resourceValue, hitName); // Updates a specific resources value
+						playGatheringSFX(HitResource);  // Plays SFX when object is gathered
 						SetStamina(-5.0f);
 					}
 					else
 					{
+						playGatheringSFX(HitResource);  // Plays SFX when object is gathered
 						HitResource->Destroy(); // If there are no resources left then destroy resource
 						check(GEngine != nullptr);
 						GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Red, TEXT("Resource Depleted"));
@@ -151,6 +188,7 @@ void AGAM_312_New_ProjectCharacter::FindObject()
 	{
 		// Player Built an object on mouse left click
 		isBuilding = false;
+		spawnedPart->SetActorEnableCollision(true);
 		objectsBuilt = objectsBuilt + 1.0f; // Adds to the total number of objects built
 	}
 
@@ -256,9 +294,7 @@ void AGAM_312_New_ProjectCharacter::GiveResource(int amount, FString resource)
 		if (resource == ResourcesNameArray[i])
 		{
 			ResourcesAmountArray[i] = ResourcesAmountArray[i] + amount;
-			FString total = FString::FromInt(ResourcesAmountArray[i]);
-			GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, TEXT("Added ") + FString::FromInt(amount) + TEXT(" ") + resource);
-			GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, TEXT("Total ") + resource + TEXT(": ") + total);
+			FString total = FString::FromInt(ResourcesAmountArray[i]);	
 		}
 	}
 }
@@ -311,9 +347,7 @@ void AGAM_312_New_ProjectCharacter::CreateBuildingPart(TSubclassOf <ABuildingPar
 		{
 			for (int i = 0; i < ResourcesNameArray.Num(); i++)
 			{
-				ResourcesAmountArray[i] = ResourcesAmountArray[i] - resourceAmount[i];
-				GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Blue, TEXT("Using ") + FString::FromInt(resourceAmount[i]) + TEXT(" ") + ResourcesNameArray[i]);
-
+				ResourcesAmountArray[i] = ResourcesAmountArray[i] - resourceAmount[i];		
 			}
 
 			// Increments the building type amount
@@ -343,8 +377,6 @@ void AGAM_312_New_ProjectCharacter::CreateBuildingPartByName(FString partName)
 			{
 				for (auto& Elem : buildingObject->resourcesUsed)
 				{
-					GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Blue, buildingObject->BuildingPartName);
-
 					FString resourceName = Elem.Key.GetDefaultObject()->resourceName; // Variable for the resource name
 					int amount = Elem.Value;  // Variable for the resource amount
 					resourceAmount.Add(amount);  // Adds the amount to the array containing all the amount of resources being subtracted
@@ -379,14 +411,10 @@ void AGAM_312_New_ProjectCharacter::CreateBuildingPartByName(FString partName)
 				for (int i = 0; i < ResourcesNameArray.Num(); i++)
 				{
 					ResourcesAmountArray[i] = ResourcesAmountArray[i] - resourceAmount[i];
-					GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Blue, TEXT("Using ") + FString::FromInt(resourceAmount[i]) + TEXT(" ") + ResourcesNameArray[i]);
-
 				}
 
 				// Increments the building type amount
 				BuildingPartsAmountArray[index]++;
-
-				GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Blue, TEXT("Adding 1 ") + BuildingPartsNameArray[index]);
 			}
 		}		
 	}
@@ -447,10 +475,22 @@ void AGAM_312_New_ProjectCharacter::SpawnBuilding(FString buildingObject, bool& 
 			FVector EndLocation = StartLocation + Direction;
 			FRotator myRot(0, 0, 0);
 
+			// Snaps the object to the grid
+			EndLocation = EndLocation.GridSnap(10);
+
+			// Object cannot go below the floor when moved around
+			if (EndLocation.Z < 0)
+			{
+				EndLocation.Z = 0;
+			}
+
 			BuildingPartsAmountArray[BuildingPartsNameArray.Find(buildingObject)] -= 1;
 
 			// Builds object
 			spawnedPart = GetWorld()->SpawnActor<ABuildingPart>(BuildingPartsArray[BuildingPartsNameArray.Find(buildingObject)], EndLocation, myRot, SpawnParams);
+
+			// Sets building part value to is being built to turn off collision while being built
+			spawnedPart->SetActorEnableCollision(false);
 
 			// This variable confirms if the building of an object was successful
 			isSuccess = true;
@@ -465,7 +505,20 @@ void AGAM_312_New_ProjectCharacter::RotateBuilding()
 	// If the player is in building mode then the object is rotated when this function is run
 	if (isBuilding)
 	{
+		GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Blue, TEXT("Rotating"));
 		spawnedPart->AddActorWorldRotation(FRotator(0, 90, 0));
+	}
+}
+
+void AGAM_312_New_ProjectCharacter::playGatheringSFX(AResourcePoint* resource)
+{
+	if (resource->soundEffects.Num() > 0)
+	{
+		TArray<USoundWave*> soundEffects = resource->soundEffects;
+
+		int index = UKismetMathLibrary::RandomIntegerInRange(0, soundEffects.Num() - 1);
+
+		UGameplayStatics::PlaySound2D(resource, soundEffects[index]);
 	}
 }
 

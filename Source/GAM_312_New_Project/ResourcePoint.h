@@ -26,16 +26,20 @@ public:
 	virtual void Tick(float DeltaTime) override;
 
 	// Name of the resource
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, Category = "Resource Information")
 	FString resourceName = "None";
 
 	// Everytime a resource is gathered it will raise by this amount
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, Category = "Resource Information")
 	int resourceAmount = 5;
 
 	// The total amount before resource is depleted
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, Category = "Resource Information")
 	int totalResource = 100;
+
+	// Sound effects used when gathering resource
+	UPROPERTY(EditAnywhere, Category = "Resource Information")
+	TArray<USoundWave*> soundEffects;
 
 	// Text for text render to set
 	UPROPERTY()

@@ -7,6 +7,8 @@
 #include "ResourcePoint.h"
 #include "BuildingPart.h"
 #include "Kismet/GameplayStatics.h"
+#include "Kismet/KismetMathLibrary.h"
+#include "PlayerStatsWidget.h"
 #include "InputActionValue.h"
 #include "GAM_312_New_ProjectCharacter.generated.h"
 
@@ -93,6 +95,8 @@ public:
 	UCameraComponent* GetFirstPersonCameraComponent() const { return FirstPersonCameraComponent; }
 
 public:
+	// Called every frame
+	virtual void Tick(float DeltaTime) override;
 
 	UFUNCTION()
 	void FindObject();
@@ -126,6 +130,10 @@ public:
 	// Function to decrease a stat
 	UFUNCTION()
 	void DecreaseStats();
+
+	// Variable playerUI is derived from the UPlayerWidget files
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UPlayerStatsWidget* playerUI;
 
 	/** Resources **/
 
@@ -200,5 +208,10 @@ public:
 	// Rotates building
 	UFUNCTION()
 	void RotateBuilding();
+
+	/** Miscellaneous **/
+
+	UFUNCTION()
+	void playGatheringSFX(AResourcePoint* resource);
 };
 

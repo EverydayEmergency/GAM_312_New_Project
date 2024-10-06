@@ -45,6 +45,10 @@ class AGAM_312_New_ProjectCharacter : public ACharacter
 	/** Interact Input Action */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	class UInputAction* InteractAction;
+
+	/** Rotate Input Action */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	class UInputAction* RotatePartAction;
 	
 public:
 	AGAM_312_New_ProjectCharacter();
@@ -182,5 +186,19 @@ public:
 	// Tracks the number of objects built in scene
 	UPROPERTY()
 	float objectsBuilt;
+
+	UPROPERTY()
+	bool isBuilding;
+
+	UPROPERTY()
+	ABuildingPart* spawnedPart;
+
+	// Spawns building
+	UFUNCTION(BlueprintCallable)
+	void SpawnBuilding(FString buildingObject, bool& isSuccess);
+
+	// Rotates building
+	UFUNCTION()
+	void RotateBuilding();
 };
 

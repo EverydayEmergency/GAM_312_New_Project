@@ -95,6 +95,9 @@ void AGAM_312_New_ProjectCharacter::SetupPlayerInputComponent(class UInputCompon
 
 		//Interact
 		EnhancedInputComponent->BindAction(InteractAction, ETriggerEvent::Triggered, this, &AGAM_312_New_ProjectCharacter::FindObject);
+
+		//Rotate
+		EnhancedInputComponent->BindAction(RotatePartAction, ETriggerEvent::Triggered, this, &AGAM_312_New_ProjectCharacter::RotateBuilding);
 	}
 }
 
@@ -110,34 +113,45 @@ void AGAM_312_New_ProjectCharacter::FindObject()
 	QueryParams.AddIgnoredActor(this); // Ignores player character
 	QueryParams.bTraceComplex = true; // Traces complex collisions
 	QueryParams.bReturnFaceIndex = true; // Returns face normals
-	// Performs line trace
-	if (GetWorld()->LineTraceSingleByChannel(HitResult, StartLocation, EndLocation, ECC_Visibility, QueryParams))
+	
+	// If the player is not building then the player can gather items via line trace
+	if (!isBuilding)
 	{
-		AResourcePoint* HitResource = Cast<AResourcePoint>(HitResult.GetActor()); // if the hitresult has a resource actor then it is assigned to hitresource
-
-		if (Stamina > 5.0f)
+		// Performs line trace
+		if (GetWorld()->LineTraceSingleByChannel(HitResult, StartLocation, EndLocation, ECC_Visibility, QueryParams))
 		{
-			if (HitResource)
+			AResourcePoint* HitResource = Cast<AResourcePoint>(HitResult.GetActor()); // if the hitresult has a resource actor then it is assigned to hitresource
+
+			if (Stamina > 5.0f)
 			{
-				FString hitName = HitResource->resourceName; // Gets the name of resource collected
-				int resourceValue = HitResource->resourceAmount; // Gets the resource's value
-
-				HitResource->totalResource = HitResource->totalResource - resourceValue; // Subtracts the value of the resource from the total resource value
-
-				// If there is more in total resource then the resource value is added to the value of whatever resource it is
-				if (HitResource->totalResource > resourceValue)
+				if (HitResource)
 				{
-					GiveResource(resourceValue, hitName); // Updates a specific resources value
-					SetStamina(-5.0f);
-				}
-				else
-				{
-					HitResource->Destroy(); // If there are no resources left then destroy resource
-					check(GEngine != nullptr);
-					GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Red, TEXT("Resource Depleted"));
+					FString hitName = HitResource->resourceName; // Gets the name of resource collected
+					int resourceValue = HitResource->resourceAmount; // Gets the resource's value
+
+					HitResource->totalResource = HitResource->totalResource - resourceValue; // Subtracts the value of the resource from the total resource value
+
+					// If there is more in total resource then the resource value is added to the value of whatever resource it is
+					if (HitResource->totalResource > resourceValue)
+					{
+						GiveResource(resourceValue, hitName); // Updates a specific resources value
+						SetStamina(-5.0f);
+					}
+					else
+					{
+						HitResource->Destroy(); // If there are no resources left then destroy resource
+						check(GEngine != nullptr);
+						GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Red, TEXT("Resource Depleted"));
+					}
 				}
 			}
 		}
+	}
+	else
+	{
+		// Player Built an object on mouse left click
+		isBuilding = false;
+		objectsBuilt = objectsBuilt + 1.0f; // Adds to the total number of objects built
 	}
 
 }
@@ -418,5 +432,40 @@ TArray<int> AGAM_312_New_ProjectCharacter::FindBuildingPartResourcesAmount(TSubc
 	}
 
 	return resourceAmount;
+}
+
+void AGAM_312_New_ProjectCharacter::SpawnBuilding(FString buildingObject, bool& isSuccess)
+{
+	if (!isBuilding)
+	{
+		if (BuildingPartsNameArray.Contains(buildingObject))
+		{
+			isBuilding = true;
+			FActorSpawnParameters SpawnParams;
+			FVector StartLocation = FirstPersonCameraComponent->GetComponentLocation();
+			FVector Direction = FirstPersonCameraComponent->GetForwardVector() * 400;
+			FVector EndLocation = StartLocation + Direction;
+			FRotator myRot(0, 0, 0);
+
+			BuildingPartsAmountArray[BuildingPartsNameArray.Find(buildingObject)] -= 1;
+
+			// Builds object
+			spawnedPart = GetWorld()->SpawnActor<ABuildingPart>(BuildingPartsArray[BuildingPartsNameArray.Find(buildingObject)], EndLocation, myRot, SpawnParams);
+
+			// This variable confirms if the building of an object was successful
+			isSuccess = true;
+		}
+
+		isSuccess = false;
+	}
+}
+
+void AGAM_312_New_ProjectCharacter::RotateBuilding()
+{
+	// If the player is in building mode then the object is rotated when this function is run
+	if (isBuilding)
+	{
+		spawnedPart->AddActorWorldRotation(FRotator(0, 90, 0));
+	}
 }
 

@@ -157,6 +157,16 @@ public:
 	UFUNCTION()
 	void GiveResource(int amount, FString resource);
 
+	UFUNCTION(BlueprintCallable)
+	AResourcePoint* FindResourceByName(FString name);
+
+	// Function that finds the index of a resource based off of the resource's name
+	UFUNCTION(BlueprintCallable)
+	int FindResourceIndex(FString resourceName);
+
+	UFUNCTION(BlueprintCallable)
+	void EatFood(AResourcePoint* resource);
+
 	/** Building Parts **/
 	
 	// Array of all the building parts that are being used in the game

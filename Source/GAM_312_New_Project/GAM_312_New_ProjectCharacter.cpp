@@ -68,7 +68,7 @@ void AGAM_312_New_ProjectCharacter::BeginPlay()
 		}
 	}
 
-	// If there are building parts in the building parts array then add the naems of the building parts to the building parts array
+	// If there are building parts in the building parts array then add the names of the building parts to the building parts array
 	if (BuildingPartsArray.Num() != 0)
 	{
 		for (int i = 0; i < BuildingPartsArray.Num(); i++)
@@ -299,6 +299,45 @@ void AGAM_312_New_ProjectCharacter::GiveResource(int amount, FString resource)
 	}
 }
 
+AResourcePoint* AGAM_312_New_ProjectCharacter::FindResourceByName(FString name)
+{
+	// If the resources array has resources in it and the resources name array has the name being called then find the resource and return it
+	if (ResourcesArray.Num() > 0 && ResourcesNameArray.Contains(name))
+	{
+		int index = ResourcesNameArray.Find(name);
+		return ResourcesArray[index].GetDefaultObject();
+	}
+	return nullptr;
+}
+
+int AGAM_312_New_ProjectCharacter::FindResourceIndex(FString resourceName)
+{
+	if (ResourcesNameArray.Num() > 0)
+	{
+		return ResourcesNameArray.Find(resourceName);
+	}
+
+	return 0;
+}
+
+void AGAM_312_New_ProjectCharacter::EatFood(AResourcePoint* resource)
+{
+	// If the resource is edible
+	if (resource->isEdible)
+	{
+		int index = ResourcesNameArray.Find(resource->resourceName);  // The index of the resource in the arrays
+
+		// If there are resources in resource array and the number of edible resources at the index is greater than 0
+		if (ResourcesArray.Num() > 0 && ResourcesAmountArray[index] > 0)
+		{
+			SetHealth(resource->healthRestored);
+			SetHunger(resource->hungerRestored);
+			SetStamina(resource->staminaRestored);
+			ResourcesAmountArray[index] -= 1;
+		}
+	}
+}
+
 void AGAM_312_New_ProjectCharacter::CreateBuildingPart(TSubclassOf <ABuildingPart> buildingObject)
 {
 	bool enoughResources = true;
@@ -361,7 +400,8 @@ void AGAM_312_New_ProjectCharacter::CreateBuildingPartByName(FString partName)
 	bool enoughResources = true;  // Variable for to test if there are enough resources
 	bool endFunction = false;  // Variable to end the function if there are not enough resources
 
-	TArray<int> resourceAmount; // Varaiable tracking the amount of each resource is being added
+	TArray<int> resourceAmounts;  // Variable tracking the amount of each resource is being added
+	TArray<FString> resourceNames;  // Variable tracking the names of each resources
 
 	// If the building parts name array and the resources name array contain an element
 	if (BuildingPartsNameArray.Num() > 0 && ResourcesNameArray.Num() > 0)
@@ -379,7 +419,9 @@ void AGAM_312_New_ProjectCharacter::CreateBuildingPartByName(FString partName)
 				{
 					FString resourceName = Elem.Key.GetDefaultObject()->resourceName; // Variable for the resource name
 					int amount = Elem.Value;  // Variable for the resource amount
-					resourceAmount.Add(amount);  // Adds the amount to the array containing all the amount of resources being subtracted
+					
+					resourceAmounts.Add(amount);  // Adds the amount to the array containing all the amount of resources being subtracted
+					resourceNames.Add(resourceName);  // Adds the name to the array of resource names being used
 
 					// If the resource name array contains the name of the resource
 					if (ResourcesNameArray.Contains(resourceName))
@@ -408,9 +450,10 @@ void AGAM_312_New_ProjectCharacter::CreateBuildingPartByName(FString partName)
 			// If the end function variable is to set to true then proceed to subtract the amount from each resource
 			if (endFunction == false)
 			{
-				for (int i = 0; i < ResourcesNameArray.Num(); i++)
+				for (int i = 0; i < resourceNames.Num(); i++)
 				{
-					ResourcesAmountArray[i] = ResourcesAmountArray[i] - resourceAmount[i];
+					int rIndex = ResourcesNameArray.Find(resourceNames[i]);
+					ResourcesAmountArray[rIndex] = ResourcesAmountArray[rIndex] - resourceAmounts[i];
 				}
 
 				// Increments the building type amount

@@ -29,6 +29,10 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Resource Information")
 	FString resourceName = "None";
 
+	// Description of the resource
+	UPROPERTY(EditAnywhere, Category = "Resource Information")
+	FString resourceDescription = "Nothing to see here.";
+
 	// Everytime a resource is gathered it will raise by this amount
 	UPROPERTY(EditAnywhere, Category = "Resource Information")
 	int resourceAmount = 5;
@@ -40,6 +44,23 @@ public:
 	// Sound effects used when gathering resource
 	UPROPERTY(EditAnywhere, Category = "Resource Information")
 	TArray<USoundWave*> soundEffects;
+
+
+	// Checks to see if the resource is edible
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Resource Information")
+	bool isEdible = false;
+
+	// The amount of health that is restored if the resource is food
+	UPROPERTY(EditAnywhere, Category = "Resource Information|Food Stats", meta=(EditCondition="isEdible", EditConditionHides))
+	int healthRestored = 0;
+
+	// The amount of hunger that is restored if the resource is food
+	UPROPERTY(EditAnywhere, Category = "Resource Information|Food Stats", meta = (EditCondition = "isEdible", EditConditionHides))
+	int hungerRestored = 10;
+
+	// The amount of stamina that is restored if the resource is food
+	UPROPERTY(EditAnywhere, Category = "Resource Information|Food Stats", meta = (EditCondition = "isEdible", EditConditionHides))
+	int staminaRestored = 0;
 
 	// Text for text render to set
 	UPROPERTY()

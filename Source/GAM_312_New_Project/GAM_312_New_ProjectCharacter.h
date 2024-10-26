@@ -6,6 +6,7 @@
 #include "GameFramework/Character.h"
 #include "ResourcePoint.h"
 #include "BuildingPart.h"
+#include "ObjectiveWidget.h"
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "PlayerStatsWidget.h"
@@ -223,5 +224,9 @@ public:
 
 	UFUNCTION()
 	void playGatheringSFX(AResourcePoint* resource);
+
+	// Variable objWidget is derived from the UObjectiveWidget files
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UObjectiveWidget* objWidget;
 };
 

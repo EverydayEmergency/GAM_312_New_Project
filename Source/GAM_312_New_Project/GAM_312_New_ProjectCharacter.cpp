@@ -44,6 +44,15 @@ void AGAM_312_New_ProjectCharacter::BeginPlay()
 
 	FTimerHandle StatsTimerHandle;
 
+	// If the object widget exists and is valid then set the values of UpdatebuildOBJ and UpdatematOBJ to initial value of 0.0
+	if (objWidget)
+	{
+		objWidget->UpdatebuildOBJ(0.0f);
+		objectsBuilt = 0.0f;
+		objWidget->UpdatematOBJ(0.0f);
+		matsCollected = 0.0f;
+	}
+
 	// Every 2 seconds this will check the StatsTimerHandle to execute the DecreaseStates function
 	GetWorld()->GetTimerManager().SetTimer(StatsTimerHandle, this, &AGAM_312_New_ProjectCharacter::DecreaseStats, 2.0f, true);
 
@@ -64,7 +73,7 @@ void AGAM_312_New_ProjectCharacter::BeginPlay()
 			FString resourceName = ResourcesArray[i].GetDefaultObject()->resourceName;
 			ResourcesNameArray.Add(resourceName);
 			ResourcesAmountArray.Add(0);
-			GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, resourceName + TEXT(": ") + FString::FromInt(ResourcesAmountArray[i]));
+			//GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, resourceName + TEXT(": ") + FString::FromInt(ResourcesAmountArray[i]));
 		}
 	}
 
@@ -76,7 +85,7 @@ void AGAM_312_New_ProjectCharacter::BeginPlay()
 			FString partName = BuildingPartsArray[i].GetDefaultObject()->BuildingPartName;
 			BuildingPartsNameArray.Add(partName);
 			BuildingPartsAmountArray.Add(0);
-			GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, partName + TEXT(": ") + FString::FromInt(BuildingPartsAmountArray[i]));
+			//GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, partName + TEXT(": ") + FString::FromInt(BuildingPartsAmountArray[i]));
 		}
 	}
 }
@@ -171,6 +180,13 @@ void AGAM_312_New_ProjectCharacter::FindObject()
 					{
 						GiveResource(resourceValue, hitName); // Updates a specific resources value
 						playGatheringSFX(HitResource);  // Plays SFX when object is gathered
+						
+						// Updates the value representing the number of materials collected
+						matsCollected = matsCollected + resourceValue;
+
+						// Changes the value of the number of materials collected on the widget which changes UI
+						objWidget->UpdatematOBJ(matsCollected);
+						
 						SetStamina(-5.0f);
 					}
 					else
@@ -178,7 +194,7 @@ void AGAM_312_New_ProjectCharacter::FindObject()
 						playGatheringSFX(HitResource);  // Plays SFX when object is gathered
 						HitResource->Destroy(); // If there are no resources left then destroy resource
 						check(GEngine != nullptr);
-						GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Red, TEXT("Resource Depleted"));
+						//GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Red, TEXT("Resource Depleted"));
 					}
 				}
 			}
@@ -190,6 +206,7 @@ void AGAM_312_New_ProjectCharacter::FindObject()
 		isBuilding = false;
 		spawnedPart->SetActorEnableCollision(true);
 		objectsBuilt = objectsBuilt + 1.0f; // Adds to the total number of objects built
+		objWidget->UpdatebuildOBJ(objectsBuilt); // Changes the value of the total number of objects built in widget for UI
 	}
 
 }
@@ -345,7 +362,7 @@ void AGAM_312_New_ProjectCharacter::CreateBuildingPart(TSubclassOf <ABuildingPar
 
 	TArray<int> resourceAmount;
 
-	GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, buildingObject.GetDefaultObject()->BuildingPartName);
+	//GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, buildingObject.GetDefaultObject()->BuildingPartName);
 
 	// If the building object has resources used defined
 	if (buildingObject.GetDefaultObject()->resourcesUsed.Num() > 0)
@@ -370,7 +387,7 @@ void AGAM_312_New_ProjectCharacter::CreateBuildingPart(TSubclassOf <ABuildingPar
 			// If the resources name array does not contain the resource named then leave an error message
 			else
 			{
-				GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, TEXT("Error: This building part contains a resource that is not in the resource list."));
+				//GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, TEXT("Error: This building part contains a resource that is not in the resource list."));
 				break;
 			}
 		}
@@ -435,7 +452,7 @@ void AGAM_312_New_ProjectCharacter::CreateBuildingPartByName(FString partName)
 					// If the resources name array does not contain the resource named then leave an error message
 					else
 					{
-						GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, TEXT("Error: This building part contains a resource that is not in the resource list."));
+						//GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, TEXT("Error: This building part contains a resource that is not in the resource list."));
 						break;
 					}
 				}
@@ -548,7 +565,7 @@ void AGAM_312_New_ProjectCharacter::RotateBuilding()
 	// If the player is in building mode then the object is rotated when this function is run
 	if (isBuilding)
 	{
-		GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Blue, TEXT("Rotating"));
+		//GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Blue, TEXT("Rotating"));
 		spawnedPart->AddActorWorldRotation(FRotator(0, 90, 0));
 	}
 }

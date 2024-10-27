@@ -205,6 +205,7 @@ void AGAM_312_New_ProjectCharacter::FindObject()
 		// Player Built an object on mouse left click
 		isBuilding = false;
 		spawnedPart->SetActorEnableCollision(true);
+		playPlacingSFX();
 		objectsBuilt = objectsBuilt + 1.0f; // Adds to the total number of objects built
 		objWidget->UpdatebuildOBJ(objectsBuilt); // Changes the value of the total number of objects built in widget for UI
 	}
@@ -352,6 +353,10 @@ void AGAM_312_New_ProjectCharacter::EatFood(AResourcePoint* resource)
 			SetStamina(resource->staminaRestored);
 			ResourcesAmountArray[index] -= 1;
 		}
+		else 
+		{
+			playNotEnoughSFX();
+		}
 	}
 }
 
@@ -387,15 +392,18 @@ void AGAM_312_New_ProjectCharacter::CreateBuildingPart(TSubclassOf <ABuildingPar
 			// If the resources name array does not contain the resource named then leave an error message
 			else
 			{
+				playErrorSFX();
 				//GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, TEXT("Error: This building part contains a resource that is not in the resource list."));
 				break;
 			}
 		}
 
-		// If there are not enough of any type of resource then set the function to end
+		// If there are not enough of any type of resource then set the function to end and play the not enough SFX
 		if (enoughResources == false)
 		{
 			endFunction = true;
+
+			playNotEnoughSFX();
 		}
 
 		// If the end function variable is to set to true then proceed to subtract the amount from each resource
@@ -408,6 +416,9 @@ void AGAM_312_New_ProjectCharacter::CreateBuildingPart(TSubclassOf <ABuildingPar
 
 			// Increments the building type amount
 			BuildingPartsAmountArray[index]++;
+
+			// Plays Building SFX
+			playBuildingSFX();
 		}
 	}
 }
@@ -452,16 +463,20 @@ void AGAM_312_New_ProjectCharacter::CreateBuildingPartByName(FString partName)
 					// If the resources name array does not contain the resource named then leave an error message
 					else
 					{
+						playErrorSFX();
 						//GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, TEXT("Error: This building part contains a resource that is not in the resource list."));
 						break;
 					}
 				}
 			}
 
-			// If there are not enough of any type of resource then set the function to end
+			// If there are not enough of any type of resource then set the function to end and play the not enough SFX
 			if (enoughResources == false)
 			{
 				endFunction = true;
+			
+				playNotEnoughSFX();
+			
 			}
 
 			// If the end function variable is to set to true then proceed to subtract the amount from each resource
@@ -475,6 +490,9 @@ void AGAM_312_New_ProjectCharacter::CreateBuildingPartByName(FString partName)
 
 				// Increments the building type amount
 				BuildingPartsAmountArray[index]++;
+
+				// Plays Building SFX
+				playBuildingSFX();
 			}
 		}		
 	}
@@ -524,7 +542,26 @@ TArray<int> AGAM_312_New_ProjectCharacter::FindBuildingPartResourcesAmount(TSubc
 
 void AGAM_312_New_ProjectCharacter::SpawnBuilding(FString buildingObject, bool& isSuccess)
 {
-	if (!isBuilding)
+	bool enoughBuildingParts = false;  // Variable for to test if there are enough of the building part
+
+	// If the building parts name array and the resources name array contain an element
+	if (BuildingPartsNameArray.Num())
+	{
+		// Checks if the building parts name array contains the part being named
+		if (BuildingPartsNameArray.Contains(buildingObject))
+		{
+			// If the amount of building parts of this type are greater than 0
+			if (BuildingPartsAmountArray[BuildingPartsNameArray.Find(buildingObject)] > 0)
+			{
+				enoughBuildingParts = true;
+			}
+			else
+			{
+				enoughBuildingParts = false;
+			}
+		}
+	}
+	if (!isBuilding && enoughBuildingParts)
 	{
 		if (BuildingPartsNameArray.Contains(buildingObject))
 		{
@@ -558,6 +595,10 @@ void AGAM_312_New_ProjectCharacter::SpawnBuilding(FString buildingObject, bool& 
 
 		isSuccess = false;
 	}
+	else 
+	{
+		playNotEnoughSFX();
+	}
 }
 
 void AGAM_312_New_ProjectCharacter::RotateBuilding()
@@ -582,3 +623,35 @@ void AGAM_312_New_ProjectCharacter::playGatheringSFX(AResourcePoint* resource)
 	}
 }
 
+void AGAM_312_New_ProjectCharacter::playBuildingSFX()
+{
+	if (buildingSFX != NULL)
+	{
+		UGameplayStatics::PlaySound2D(this, buildingSFX);
+	}
+}
+
+void AGAM_312_New_ProjectCharacter::playPlacingSFX()
+{
+	if (placingSFX != NULL)
+	{
+		UGameplayStatics::PlaySound2D(this, placingSFX);
+	}
+}
+
+void AGAM_312_New_ProjectCharacter::playNotEnoughSFX()
+{
+	if (notEnoughSFX != NULL)
+	{
+		UGameplayStatics::PlaySound2D(this, notEnoughSFX);
+	}
+}
+
+void AGAM_312_New_ProjectCharacter::playErrorSFX()
+{
+	if (errorSFX != NULL)
+	{
+		UGameplayStatics::PlaySound2D(this, errorSFX);
+	}
+	
+}

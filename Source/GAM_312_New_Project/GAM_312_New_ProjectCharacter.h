@@ -165,6 +165,7 @@ public:
 	UFUNCTION(BlueprintCallable)
 	int FindResourceIndex(FString resourceName);
 
+	// Function to eat a food resource
 	UFUNCTION(BlueprintCallable)
 	void EatFood(AResourcePoint* resource);
 
@@ -218,13 +219,46 @@ public:
 
 	// Rotates building
 	UFUNCTION()
-	void RotateBuilding();
+	void RotateBuilding();	
 
-	/** Miscellaneous **/
-
+	/** SFX **/
+	// Function played when a resource is being gathered
 	UFUNCTION()
 	void playGatheringSFX(AResourcePoint* resource);
 
+	// Sound effects played when creating a part
+	UPROPERTY(EditAnywhere, Category = "SFX")
+	USoundWave* buildingSFX;
+
+	// Sound effects played when placing a part
+	UPROPERTY(EditAnywhere, Category = "SFX")
+	USoundWave* placingSFX;
+
+	// Sound effects played when there is not enough of a resource or building part
+	UPROPERTY(EditAnywhere, Category = "SFX")
+	USoundWave* notEnoughSFX;
+
+	// Sound effects played if there is an error
+	UPROPERTY(EditAnywhere, Category = "SFX")
+	USoundWave* errorSFX;
+
+	// Function played when creating a part
+	UFUNCTION()
+	void playBuildingSFX();
+
+	// Function played when placing a part
+	UFUNCTION()
+	void playPlacingSFX();
+
+	// Function played when there is not enough of a resource or building part
+	UFUNCTION()
+	void playNotEnoughSFX();
+
+	// Function played when there is a error
+	UFUNCTION()
+	void playErrorSFX();
+
+	/** Miscellaneous **/
 	// Variable objWidget is derived from the UObjectiveWidget files
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	UObjectiveWidget* objWidget;
